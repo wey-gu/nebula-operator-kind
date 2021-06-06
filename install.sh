@@ -30,7 +30,7 @@ function logger_error {
 }
 
 function logger_ok {
-    echo "[✔️ ] " $1
+    echo " ✔️   " $1
 }
 
 function execute_step {
@@ -39,9 +39,9 @@ function execute_step {
 }
 
 function print_banner {
-    echo '┌──────────────────────────────────────────────────────────────────────────────────────────┐'
-    echo '│ 🌌 Nebula-Graph K8s Playground is on the way...                                          │'
-    echo '└──────────────────────────────────────────────────────────────────────────────────────────┘'
+    echo '┌───────────────────────────────────────────────────────────────┐'
+    echo '│ 🌌 Nebula-K8S in Docker is on the way...                      │'
+    echo '└───────────────────────────────────────────────────────────────┘'
 }
 
 function get_platform {
@@ -231,16 +231,16 @@ function install_kubectl {
     else
         cd $WOKRING_PATH
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl > /dev/null || logger_error "Failed to install kubectl"
     fi
 }
 
 function install_nebula_console {
     cd $WOKRING_PATH/bin/
     if is_mac; then
-        curl -LO "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-darwin-amd64-v2.0.0-ga" -o console
+        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-darwin-amd64-v2.0.0-ga" -o console
     else
-        curl -LO "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-linux-amd64-v2.0.0-ga" -o console
+        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-linux-amd64-v2.0.0-ga" -o console
     fi
     chmod +x console
 }
@@ -272,39 +272,11 @@ function check_ports_availability {
     # TBD
 }
 
-# Deploy Nebula Graph
-
-function waiting_for_nebula_graph_up {
-    logger_info "Waiting for all nebula-graph containers to be healthy..."
-    expected_containers_count_str="9"
-    healthy_containers_count_str=""
-    local max_attempts=${MAX_ATTEMPTS-6}
-    local timer=${INIT_TIMER-4}
-    local attempt=1
-
-    while [[ $attempt < $max_attempts ]]
-    do
-        healthy_containers_count_str=$(docker ps --filter health=healthy |grep -v "CONTAINER ID"|wc -l|sed -e 's/^[[:space:]]*//')
-        if [[ "$healthy_containers_count_str" == "$expected_containers_count_str" ]]; then
-            logger_ok "all nebula-graph containers are healthy."
-            break
-        fi
-        logger_info "Nebula-Graph Containers Healthcheck Attempt: ${attempt-0} Failed, Retrying in $timer Seconds..."
-        sleep $timer
-        attempt=$(( attempt + 1 ))
-        timer=$(( timer * 2 ))
-    done
-
-    if [[ "$healthy_containers_count_str" != "$expected_containers_count_str" ]]; then
-        logger_warn "Failed to waiting for all containers to be healthy, check docker ps for details."
-    fi
-}
-
 function download_kind {
     # For both Linux and Darwin cases, CN network was considerred
     logger_info "Starting Instlation of Docker"
     case $PLATFORM in
-        *inux*)  utility_exists "curl" || install_package "curl" && curl -Lo $WOKRING_PATH/bin/kind https://kind.sigs.k8s.io/dl/v0.11.0/kind-linux-amd64 ;;
+        *inux*)  utility_exists "curl" || install_package "curl" && curl -Lo $WOKRING_PATH/bin/kind https://kind.sigs.k8s.io/dl/v0.11.0/kind-linux-amd64 && chmod +x $WOKRING_PATH/bin/kind ;;
         *arwin*) install_package "kind" ;;
     esac
 }
@@ -314,12 +286,13 @@ function install_kind {
     if [ ! -d "$WOKRING_PATH/bin" ]; then
         mkdir -p $WOKRING_PATH/bin
     fi
-    cd kind && download_kind 1>/dev/null 2>/dev/null
+    download_kind 1>/dev/null 2>/dev/null
     cat <<EOF | $WOKRING_PATH/bin/kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 featureGates:
   "RemoveSelfLink": false
+nodes:
 - role: control-plane
   extraPortMappings:
   - containerPort: 9669
@@ -348,14 +321,24 @@ function install_nebula_operator {
     else
         logger_warn "$WOKRING_PATH/nebula-operator already exists, existing repo will be reused"
     fi
-    kubectl create namespace nebula-operator-system
-    helm install nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="0.1.0"
+    kubectl create namespace nebula-operator-system > /dev/null
+    cd $WOKRING_PATH/nebula-operator
+    helm repo add nebula-operator https://vesoft-inc.github.io/nebula-operator/charts > /dev/null || logger_error "Failed to add helm repo: nebula-operator"
+    helm repo update > /dev/null || logger_error "Failed to update helm repo"
+
+    sleep 10
+    logger_info "Waiting for kruise-system pods to be ready..."
+    until kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' --all-namespaces > /dev/null
+    do
+       kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' --all-namespaces > /dev/null
+    done
+    helm install nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="0.1.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
 
     sleep 10
     logger_info "Waiting for nebula-operator pods to be ready..."
-    until kubectl wait pod --timeout=-1s --for=condition=Ready -n kube-system > /dev/null
+    until kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' -n nebula-operator-system > /dev/null
     do
-       kubectl wait pod --timeout=-1s --for=condition=Ready -n kube-system > /dev/null
+       kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' -n nebula-operator-system > /dev/null
     done
 }
 
@@ -365,21 +348,22 @@ function install_hostpath_provisioner {
     helm repo add rimusz https://charts.rimusz.net
     helm repo update
     helm upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner
-
+    sleep 5
     logger_info "Waiting for hostpath-provisioner pods to be ready..."
-    until kubectl wait pod --timeout=-1s --for=condition=Ready -n kube-system > /dev/null
+    until kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' -n kube-system > /dev/null
     do
-       kubectl wait pod --timeout=-1s --for=condition=Ready -n kube-system > /dev/null
+       kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' -n kube-system > /dev/null
     done
 }
 
 function create_nebula_cluster {
     cd $WOKRING_PATH
     kubectl create -f nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    sleep 45
     logger_info "Waiting for nebula cluster pods to be ready..."
-    until kubectl wait pod --timeout=-1s --for=condition=Ready > /dev/null
+    until kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' > /dev/null
     do
-       kubectl wait pod --timeout=-1s --for=condition=Ready > /dev/null
+       kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' > /dev/null
     done
 }
 
@@ -396,7 +380,8 @@ function create_uninstall_script {
 # Usage: uninstall.sh
 
 echo " ℹ️   Cleaning Up Files under $WOKRING_PATH..."
-$WOKRING_PATH/bin/kind delete kind 2>/dev/null
+$WOKRING_PATH/bin/kind delete cluster --name kind 2>/dev/null
+helm uninstall nebula-operator -n nebula-operator-system 2>/dev/null
 sudo rm -fr $WOKRING_PATH $WOKRING_PATH/nebula-docker-compose 2>/dev/null
 echo "┌────────────────────────────────────────┐"
 echo "│ 🌌 Nebula-Kind Uninstalled             │"
@@ -408,10 +393,10 @@ EOF
 function print_footer {
 
     echo "┌────────────────────────────────────────┐"
-    echo "│ 🌌 Nebula-Graph Playground is Up now!  │"
+    echo "│ 🌌 Nebula-Kind Playground is Up now!   │"
     echo "├────────────────────────────────────────┤"
     echo "│                                        │"
-    echo "│ 🎉 Congrats! Your Nebula is Up now!    │"
+    echo "│ 🎉 Congrats!                           │"
     echo "│    $ cd ~/.nebula-kind                 │"
     echo "│                                        │"
     echo "│ 🔥 Or access via Nebula Console:       │"
@@ -429,11 +414,11 @@ function print_footer {
 function print_footer_error {
 
     echo "┌────────────────────────────────────────┐"
-    echo "│ 🌌 Nebula-Kind run into issues 😢        │"
+    echo "│ 🌌 Nebula-Kind run into issues 😢      │"
     echo "├────────────────────────────────────────┤"
     echo "│                                        │"
     echo "│ 🎉 To cleanup:                         │"
-    echo "│    $ ~/.nebula-kind/uninstall.sh         │"
+    echo "│    $ ~/.nebula-kind/uninstall.sh       │"
     echo "│                                        │"
     echo "└────────────────────────────────────────┘"
 
@@ -466,8 +451,6 @@ function main {
     execute_step install_hostpath_provisioner
     execute_step create_nebula_cluster
     execute_step install_nebula_console
-
-    execute_step waiting_for_nebula_graph_up
 
     print_footer
 }

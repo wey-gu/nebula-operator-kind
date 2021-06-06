@@ -2,6 +2,7 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 featureGates:
   "RemoveSelfLink": false
+nodes:
 - role: control-plane
   extraPortMappings:
   - containerPort: 9669
