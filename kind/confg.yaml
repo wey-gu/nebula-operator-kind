@@ -1,0 +1,10 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+featureGates:
+  "RemoveSelfLink": false
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 9669
+    hostPort: 9669
+  - containerPort: 19669
+    hostPort: 19669
