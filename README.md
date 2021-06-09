@@ -11,7 +11,7 @@ With the help of [KIND](https://kind.sigs.k8s.io/)(K8s IN Docker), KGonK helps u
 
 ## How To Use
 
-Just call the following one liner from your Linux Machine with at least 8 vCPUs:
+Just call the following one liner from your Linux Machine with at least 4 vCPUs:
 
 ```bash
 curl -sL nebula-kind.siwei.io/install.sh | bash
@@ -38,3 +38,37 @@ You could learn more about Nebula-Operator:
 | Access Nebula Cluster created by Nebula Operator | https://github.com/vesoft-inc/nebula-operator/blob/master/doc/user/client_service.md |
 | Docs of Nebula Graph                             | English: https://docs.nebula-graph.io<br />Chinese: https://docs.nebula-graph.com.cn |
 
+
+## Troubleshooting
+
+### Ensuring docker Permission Failed
+You may encounter this error in case docker was not installed before our installation, you could just follow instructions below to run `newgrp docker` and then rerun the installation, it will pass in next go.
+```bash
+ℹ️    Ensuring Linux Docker Permission
+
+ ❌   Ensuring docker Permission Failed, please try:
+ option 0: execute this command and retry:
+ $ newgrp docker
+ option 1: relogin current shell session and retry install.sh
+```
+
+### Some of the K8S resource is not ready(pods)
+
+```bash
+ℹ️    Waiting for <foo bar> pods to be ready...
+```
+
+There could be different causes:
+
+You could check the reason from another terminal:
+
+```bash
+kubectl get pods --all-namespaces
+kubectl describe pods <pod_name> -n <namespace_name>
+```
+
+- Docker hub pull limit hit
+In this case, you can refer to https://medium.com/rossum/how-to-overcome-docker-hub-pull-limits-in-a-kubernetes-cluster-382f317accc1
+
+- CPU resource is not enough
+Please assign more CPU/RAM to your docker or host machine.

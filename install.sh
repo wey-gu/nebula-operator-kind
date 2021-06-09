@@ -221,8 +221,8 @@ EOF
     fi
     docker ps 1>/dev/null 2>/dev/null || \
         logger_error "Ensuring docker Permission Failed, please try: \n \
-            option 0: execute this command and retry:\n     newgrp docker\n \
-            option 1: relogin current shell session and retry install.sh \n"
+            option 0: execute this command and retry:\n $ newgrp docker\n \
+            option 1: relogin current shell session and retry installation \n"
 }
 
 function install_kubectl {
