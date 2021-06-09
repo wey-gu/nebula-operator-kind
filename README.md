@@ -4,10 +4,11 @@ This is a project inspired by [Carlos Santana](https://twitter.com/csantanapr)'s
 
 With the help of [KIND](https://kind.sigs.k8s.io/)(K8s IN Docker), KGonK helps us provision a dedicated ephemeral K8S cluster with all dependencies inside Docker, including:
 
-- a dynamic storageClass provider
-- all third parties of [nebula-operator](https://github.com/vesoft-inc/nebula-operator)
+- A dynamic storageClass provider
+- All third party dependencies of [nebula-operator](https://github.com/vesoft-inc/nebula-operator)
 - Nebula-Operator Pods in namespace: `nebula-operator-system`
-- the Nebula Graph Cluster Pods in default namespace
+- The Nebula Graph Cluster Pods in default namespace
+- A nodePort service exposing `0.0.0.0:30000` of the host mapped to `graphd:9669`
 
 ## How To Use
 
