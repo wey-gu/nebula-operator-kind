@@ -245,6 +245,41 @@ function install_nebula_console {
     chmod +x console
 }
 
+function create_node_port {
+    cd $WOKRING_PATH/bin/
+    cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/cluster: nebula
+    app.kubernetes.io/component: graphd
+    app.kubernetes.io/managed-by: nebula-operator
+    app.kubernetes.io/name: nebula-graph
+  name: nebula-graphd-svc-nodeport
+  namespace: default
+spec:
+  externalTrafficPolicy: Local
+  ports:
+  - name: thrift
+    port: 9669
+    protocol: TCP
+    targetPort: 9669
+    nodePort: 30000
+  - name: http
+    port: 19669
+    protocol: TCP
+    targetPort: 19669
+    nodePort: 30001
+  selector:
+    app.kubernetes.io/cluster: nebula
+    app.kubernetes.io/component: graphd
+    app.kubernetes.io/managed-by: nebula-operator
+    app.kubernetes.io/name: nebula-graph
+  type: NodePort
+EOF
+}
+
 function ensure_dependencies {
     if ! utility_exists "git"; then
         install_package "git"
@@ -295,10 +330,10 @@ featureGates:
 nodes:
 - role: control-plane
   extraPortMappings:
-  - containerPort: 9669
-    hostPort: 9669
-  - containerPort: 19669
-    hostPort: 19669
+  - containerPort: 30000
+    hostPort: 30000
+  - containerPort: 30001
+    hostPort: 30001
 EOF
     logger_info "Waiting for k8s cluster to be ready..."
     sleep 10
@@ -344,6 +379,8 @@ function install_nebula_operator {
 
 function install_hostpath_provisioner {
     cd $WOKRING_PATH
+    sed -i 's/500m/100m/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    sed -i 's/500Mi/200Mi/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     sed -i 's/gp2/hostpath/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     helm repo add rimusz https://charts.rimusz.net
     helm repo update
@@ -408,7 +445,13 @@ function print_footer {
     echo "│ 🚀 Have Fun!                           │"
     echo "│                                        │"
     echo "└────────────────────────────────────────┘"
-
+    echo
+    echo
+    echo "┌──────────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ 🔥 You can access its console as with following command                              │"
+    echo "├──────────────────────────────────────────────────────────────────────────────────────┤"
+    echo "│~/.nebula-kind/bin/console -u user -p password --address=127.0.0.1 --port=30000       │"
+    echo "└──────────────────────────────────────────────────────────────────────────────────────┘"
 }
 
 function print_footer_error {
@@ -417,7 +460,7 @@ function print_footer_error {
     echo "│ 🌌 Nebula-Kind run into issues 😢      │"
     echo "├────────────────────────────────────────┤"
     echo "│                                        │"
-    echo "│ 🎉 To cleanup:                         │"
+    echo "│ 🎉 To cleanup before retrying :        │"
     echo "│    $ ~/.nebula-kind/uninstall.sh       │"
     echo "│                                        │"
     echo "└────────────────────────────────────────┘"
@@ -451,6 +494,7 @@ function main {
     execute_step install_hostpath_provisioner
     execute_step create_nebula_cluster
     execute_step install_nebula_console
+    execute_step create_node_port
 
     print_footer
 }

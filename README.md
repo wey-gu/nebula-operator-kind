@@ -23,6 +23,11 @@ Then you may see something like this:
 
 ## What's Next?
 
+Access nebula graph console with this command:
+```bash
+~/.nebula-kind/bin/console -u user -p password --address=127.0.0.1 --port=30000
+```
+
 You could learn more about Nebula-Operator:
 
 | Items                                            | URL                                                          |
