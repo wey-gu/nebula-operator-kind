@@ -26,7 +26,7 @@ Then you may see something like this:
 
 Access nebula graph console with this command:
 ```bash
-~/.nebula-kind/bin/console -u user -p password --address=127.0.0.1 --port=30000
+~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=30000
 ```
 
 You could learn more about Nebula-Operator:
@@ -69,7 +69,9 @@ kubectl describe pods <pod_name> -n <namespace_name>
 ```
 
 - Docker hub pull limit hit
-In this case, you can refer to https://medium.com/rossum/how-to-overcome-docker-hub-pull-limits-in-a-kubernetes-cluster-382f317accc1
+In this case, you can refer to https://medium.com/rossum/how-to-overcome-docker-hub-pull-limits-in-a-kubernetes-cluster-382f317accc1.
+
+If you are in China, [this](https://gist.github.com/y0ngb1n/7e8f16af3242c7815e7ca2f0833d3ea6) may help.
 
 - CPU resource is not enough
 Please assign more CPU/RAM to your docker or host machine.
