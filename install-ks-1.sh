@@ -40,7 +40,7 @@ function execute_step {
 
 function print_banner {
     echo '┌───────────────────────────────────────────────────────────────┐'
-    echo '│ 🌌 Nebula-K8S in Docker is on the way...                      │'
+    echo '│ 🌌 Nebula-K8S in ks-all-in-one is on the way...               │'
     echo '└───────────────────────────────────────────────────────────────┘'
 }
 
@@ -246,7 +246,6 @@ function install_nebula_console {
 }
 
 function create_node_port {
-    cd $WOKRING_PATH/bin/
     cat <<EOF | kubectl create -f -
 apiVersion: v1
 kind: Service
@@ -265,12 +264,12 @@ spec:
     port: 9669
     protocol: TCP
     targetPort: 9669
-    nodePort: 30000
+    nodePort: 32669
   - name: http
     port: 19669
     protocol: TCP
     targetPort: 19669
-    nodePort: 30001
+    nodePort: 32001
   selector:
     app.kubernetes.io/cluster: nebula
     app.kubernetes.io/component: graphd
@@ -330,10 +329,10 @@ featureGates:
 nodes:
 - role: control-plane
   extraPortMappings:
-  - containerPort: 30000
-    hostPort: 30000
-  - containerPort: 30001
-    hostPort: 30001
+  - containerPort: 32669
+    hostPort: 32669
+  - containerPort: 32001
+    hostPort: 32001
 EOF
     logger_info "Waiting for k8s cluster to be ready..."
     sleep 10
@@ -382,7 +381,7 @@ function install_hostpath_provisioner {
     cd $WOKRING_PATH
     sed -i 's/500m/1m/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     sed -i 's/500Mi/20Mi/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
-    sed -i 's/gp2/hostpath/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    sed -i 's/gp2/local/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     helm repo add rimusz https://charts.rimusz.net
     helm repo update
     helm upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner
@@ -396,6 +395,9 @@ function install_hostpath_provisioner {
 
 function create_nebula_cluster {
     cd $WOKRING_PATH
+    sed -i 's/500m/1m/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    sed -i 's/500Mi/20Mi/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    sed -i 's/gp2/local/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     kubectl create -f nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     sleep 45
     logger_info "Waiting for nebula cluster pods to be ready..."
@@ -418,8 +420,10 @@ function create_uninstall_script {
 # Usage: uninstall.sh
 
 echo " ℹ️   Cleaning Up Files under $WOKRING_PATH..."
+kubectl delete -f $WOKRING_PATH/nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml 2>/dev/null
+kubectl delete pvc graphd-nebula-graphd-0 metad-nebula-metad-0 storaged-nebula-storaged-0 storaged-nebula-storaged-1 storaged-nebula-storaged-2 2>/dev/null
 kubectl delete ns kruise-system nebula-operator-system cert-manager 2>/dev/null
-$WOKRING_PATH/bin/kind delete cluster --name kind 2>/dev/null
+# $WOKRING_PATH/bin/kind delete cluster --name kind 2>/dev/null
 helm uninstall nebula-operator -n nebula-operator-system 2>/dev/null
 sudo rm -fr $WOKRING_PATH $WOKRING_PATH/nebula-operator 2>/dev/null
 echo "┌────────────────────────────────────────┐"
@@ -452,7 +456,7 @@ function print_footer {
     echo "┌──────────────────────────────────────────────────────────────────────────────────────┐"
     echo "│ 🔥 You can access its console as with following command                              │"
     echo "├──────────────────────────────────────────────────────────────────────────────────────┤"
-    echo "│~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=30000       │"
+    echo "│~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=32669       │"
     echo "└──────────────────────────────────────────────────────────────────────────────────────┘"
 }
 
@@ -474,26 +478,26 @@ function main {
 
     CURRENT_PATH="$pwd"
     WOKRING_PATH="$HOME/.nebula-kind"
-    mkdir -p $WOKRING_PATH && cd $WOKRING_PATH
+    mkdir -p $WOKRING_PATH/bin && cd $WOKRING_PATH
     PLATFORM=$(get_platform)
     CN_NETWORK=false
     if is_CN_NETWORK; then
         CN_NETWORK=true
     fi
 
-    execute_step verify_sudo_permission
-    logger_info "Preparing Nebula-Kind Uninstall Script..."
+    # execute_step verify_sudo_permission
+    # logger_info "Preparing Nebula-Kind Uninstall Script..."
     execute_step create_uninstall_script
 
-    logger_info "Ensuring Depedencies..."
-    execute_step ensure_dependencies
+    # logger_info "Ensuring Depedencies..."
+    # execute_step ensure_dependencies
 
-    logger_info "Install K8s in Docker..."
-    execute_step install_kind
+    # logger_info "Install K8s in Docker..."
+    # execute_step install_kind
 
     logger_info "Boostraping Nebula Graph with Nebula-Operator"
     execute_step install_nebula_operator
-    execute_step install_hostpath_provisioner
+    # execute_step install_hostpath_provisioner
     execute_step create_nebula_cluster
     execute_step install_nebula_console
     execute_step create_node_port
