@@ -238,9 +238,9 @@ function install_kubectl {
 function install_nebula_console {
     cd $WOKRING_PATH/bin/
     if is_mac; then
-        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-darwin-amd64-v2.0.0-ga" -o console
+        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.5.0/nebula-console-darwin-amd64-v2.5.0" -o console
     else
-        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-linux-amd64-v2.0.0-ga" -o console
+        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.5.0/nebula-console-linux-amd64-v2.5.0" -o console
     fi
     chmod +x console
 }
