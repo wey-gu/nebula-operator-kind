@@ -12,7 +12,7 @@ With the help of [KIND](https://kind.sigs.k8s.io/)(K8s IN Docker), KGonK helps u
 
 ## How To Use
 
-Just call the following one liner from your Linux Machine with at least 4 vCPUs:
+Just call the following one liner from your Linux Machine:
 
 ```bash
 curl -sL nebula-kind.siwei.io/install.sh | bash
