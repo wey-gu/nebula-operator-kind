@@ -8,7 +8,7 @@ With the help of [KIND](https://kind.sigs.k8s.io/)(K8s IN Docker), KGonK helps u
 - All third party dependencies of [nebula-operator](https://github.com/vesoft-inc/nebula-operator)
 - Nebula-Operator Pods in namespace: `nebula-operator-system`
 - The Nebula Graph Cluster Pods in default namespace
-- A nodePort service exposing `0.0.0.0:30000` of the host mapped to `graphd:9669`
+- A nodePort service exposing `0.0.0.0:32669` of the host mapped to `graphd:9669`
 
 ## How To Use
 
@@ -39,7 +39,7 @@ curl -sL nebula-kind.siwei.io/install-on-k8s.sh | bash
 
 Access nebula graph console with this command:
 ```bash
-~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=30000
+~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=32669
 ```
 
 You could learn more about Nebula-Operator:
