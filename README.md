@@ -24,7 +24,7 @@ Then you may see something like this:
 
 Also, there are some extended script for different purposes:
 
-> Bootstrap a nebula clsuter on KubeSphere All-in-one K8s env:
+> Bootstrap a nebula clsuter on existing KubeSphere All-in-one K8s env:
 
 ```bash
 curl -sL nebula-kind.siwei.io/install-ks-1.sh | bash
