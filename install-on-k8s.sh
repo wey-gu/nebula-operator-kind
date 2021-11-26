@@ -237,9 +237,9 @@ function install_kubectl {
 function install_nebula_console {
     cd $WOKRING_PATH/bin/
     if is_mac; then
-        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.6.0/nebula-console-darwin-amd64-v2.6.0" -o console
+        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-darwin-amd64-v2.0.0-ga" -o console
     else
-        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.6.0/nebula-console-linux-amd64-v2.6.0" -o console
+        curl -L "https://github.com/vesoft-inc/nebula-console/releases/download/v2.0.0-ga/nebula-console-linux-amd64-v2.0.0-ga" -o console
     fi
     chmod +x console
 }
@@ -351,7 +351,8 @@ function install_nebula_operator {
     export PATH=/usr/local/bin:$PATH
     helm install --set manager.resources.requests.cpu=1m kruise https://github.com/openkruise/kruise/releases/download/v0.9.0/kruise-chart.tgz
     if [ ! -d "$WOKRING_PATH/nebula-operator" ]; then
-        git clone https://github.com/vesoft-inc/nebula-operator.git
+        git clone --branch v0.8.0 https://github.com/vesoft-inc/nebula-operator.git
+        
     else
         logger_warn "$WOKRING_PATH/nebula-operator already exists, existing repo will be reused"
     fi
@@ -366,7 +367,7 @@ function install_nebula_operator {
     do
        kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' --all-namespaces > /dev/null
     done
-    helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="0.9.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
+    helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="0.8.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
 
     sleep 20
     logger_info "Waiting for nebula-operator pods to be ready..."
