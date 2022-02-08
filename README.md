@@ -42,6 +42,9 @@ curl -sL nebula-kind.siwei.io/install-on-k8s.sh | bash
 Download the basketball player dataset and import it to the nebula graph:
 ```bash
 wget https://docs.nebula-graph.io/2.0/basketballplayer-2.X.ngql
+#### Modify vid format to numeric due to GraphX's limitation.
+sed -i 's/player1/11/' basketballplayer-2.X.ngql
+sed -i 's/team2/22/' basketballplayer-2.X.ngql
 ~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=30000 -f basketballplayer-2.X.ngql
 ```
 
@@ -76,9 +79,14 @@ kubectl exec -it deploy/spark-deployment -- bash
 
 Then, we could download the nebula-algorithm, i.e. in version `2.6.1`, please refer to https://github.com/vesoft-inc/nebula-algorithm/ for more.
 
+> Note:
+> - Official released packages can be found: https://repo1.maven.org/maven2/com/vesoft/nebula-algorithm/
+> - Due to https://github.com/vesoft-inc/nebula-algorithm/issues/42 , we have to use [this](https://github.com/wey-gu/nebula-algorithm/releases/download/v2.6_patched/nebula-algorithm-2.6.1-patched-domain-name.jar) before it's fixed in a release.
+
 ```bash
-wget https://repo1.maven.org/maven2/com/vesoft/nebula-algorithm/2.6.1/nebula-algorithm-2.6.1.jar
+wget https://github.com/wey-gu/nebula-algorithm/releases/download/v2.6_patched/nebula-algorithm-2.6.1-patched-domain-name.jar
 wget https://github.com/vesoft-inc/nebula-algorithm/raw/master/nebula-algorithm/src/main/resources/application.conf
+mv nebula-algorithm-2.6.1-patched-domain-name.jar nebula-algorithm-2.6.1.jar
 ```
 
 Then we could change the config file of nebula-algorithm on meta and graph addresses:
@@ -100,7 +108,20 @@ Run LPA Algorithm on the basketballplayer graph space:
     nebula-algorithm-2.6.1.jar \
     -p application.conf
 ```
-> Note: due to https://github.com/vesoft-inc/nebula-algorithm/issues/42 , the algorithm cannot talk to nebula graph running in k8s for now.
+
+The result was configured in csv file:
+```bash
+bash-5.0# ls /tmp/count/
+_SUCCESS                                                  part-00000-5475f9f4-66b9-426b-b0c2-704f946e54d3-c000.csv
+bash-5.0# head /tmp/count/part-00000-5475f9f4-66b9-426b-b0c2-704f946e54d3-c000.csv
+_id,lpa
+1100,1104
+2200,2200
+2201,2201
+1101,1104
+2202,2202
+```
+
 
 ## Troubleshooting
 
