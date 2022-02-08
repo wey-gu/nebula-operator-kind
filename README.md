@@ -8,7 +8,7 @@ With the help of [KIND](https://kind.sigs.k8s.io/)(K8s IN Docker), KGonK helps u
 - All third party dependencies of [nebula-operator](https://github.com/vesoft-inc/nebula-operator)
 - Nebula-Operator Pods in namespace: `nebula-operator-system`
 - The Nebula Graph Cluster Pods in default namespace
-- A nodePort service exposing `0.0.0.0:32669` of the host mapped to `graphd:9669`
+- A nodePort service exposing `0.0.0.0:30000` of the host mapped to `graphd:9669`
 
 ## How To Use
 
@@ -37,9 +37,17 @@ curl -sL nebula-kind.siwei.io/install-on-k8s.sh | bash
 
 ## What's Next?
 
+### Connect via nebula-console
+
+Download the basketball player dataset and import it to the nebula graph:
+```bash
+wget https://docs.nebula-graph.io/2.0/basketballplayer-2.X.ngql
+~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=30000 -f basketballplayer-2.X.ngql
+```
+
 Access nebula graph console with this command:
 ```bash
-~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=32669
+~/.nebula-kind/bin/console -u root -p password --address=127.0.0.1 --port=30000
 ```
 
 You could learn more about Nebula-Operator:
@@ -52,6 +60,47 @@ You could learn more about Nebula-Operator:
 | Access Nebula Cluster created by Nebula Operator | https://github.com/vesoft-inc/nebula-operator/blob/master/doc/user/client_service.md |
 | Docs of Nebula Graph                             | English: https://docs.nebula-graph.io<br />Chinese: https://docs.nebula-graph.com.cn |
 
+### Try Nebula-Algorithm
+
+To quickly try Nebula Algorithm, we could create a spark pod in same namespace of the nebulaCluster CRD:
+
+```bash
+kubectl create -f http://nebula-kind.siwei.io/deployment/spark.yaml
+kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name'
+```
+
+After the spark pod is ready, we could access to the spark container:
+```bash
+kubectl exec -it deploy/spark-deployment -- bash
+```
+
+Then, we could download the nebula-algorithm, i.e. in version `2.6.1`, please refer to https://github.com/vesoft-inc/nebula-algorithm/ for more.
+
+```bash
+wget https://repo1.maven.org/maven2/com/vesoft/nebula-algorithm/2.6.1/nebula-algorithm-2.6.1.jar
+wget https://github.com/vesoft-inc/nebula-algorithm/raw/master/nebula-algorithm/src/main/resources/application.conf
+```
+
+Then we could change the config file of nebula-algorithm on meta and graph addresses:
+```bash
+sed -i '/^        metaAddress/c\        metaAddress: \"nebula-metad-0.nebula-metad-headless.default.svc.cluster.local:9559\"' application.conf
+sed -i '/^        graphAddress/c\        graphAddress: \"nebula-graphd-0.nebula-graphd-svc.default.svc.cluster.local:9669\"' application.conf
+##### change space
+sed -i '/^        space/c\        space: basketballplayer' application.conf
+##### read data from nebula graph
+sed -i '/^    source/c\    source: nebula' application.conf
+##### execute algorithm: labelpropagation
+sed -i '/^    executeAlgo/c\    executeAlgo: labelpropagation' application.conf
+```
+
+Run LPA Algorithm on the basketballplayer graph space:
+```bash
+/spark/bin/spark-submit --master "local" --conf spark.rpc.askTimeout=6000s \
+    --class com.vesoft.nebula.algorithm.Main \
+    nebula-algorithm-2.6.1.jar \
+    -p application.conf
+```
+> Note: due to https://github.com/vesoft-inc/nebula-algorithm/issues/42 , the algorithm cannot talk to nebula graph running in k8s for now.
 
 ## Troubleshooting
 
