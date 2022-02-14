@@ -77,16 +77,15 @@ After the spark pod is ready, we could access to the spark container:
 kubectl exec -it deploy/spark-deployment -- bash
 ```
 
-Then, we could download the nebula-algorithm, i.e. in version `2.6.1`, please refer to https://github.com/vesoft-inc/nebula-algorithm/ for more.
+Then, we could download the nebula-algorithm, i.e. in version `2.6.2`, please refer to https://github.com/vesoft-inc/nebula-algorithm/ for more.
 
 > Note:
 > - Official released packages can be found: https://repo1.maven.org/maven2/com/vesoft/nebula-algorithm/
-> - Due to https://github.com/vesoft-inc/nebula-algorithm/issues/42 , we have to use [this](https://github.com/wey-gu/nebula-algorithm/releases/download/v2.6_patched/nebula-algorithm-2.6.1-patched-domain-name.jar) before it's fixed in a release.
+> - Due to https://github.com/vesoft-inc/nebula-algorithm/issues/42 , only 2.6.2+ of nebula algorithm supports K8s.
 
 ```bash
-wget https://github.com/wey-gu/nebula-algorithm/releases/download/v2.6_patched/nebula-algorithm-2.6.1-patched-domain-name.jar
+wget https://repo1.maven.org/maven2/com/vesoft/nebula-algorithm/2.6.2/nebula-algorithm-2.6.2.jar
 wget https://github.com/vesoft-inc/nebula-algorithm/raw/master/nebula-algorithm/src/main/resources/application.conf
-mv nebula-algorithm-2.6.1-patched-domain-name.jar nebula-algorithm-2.6.1.jar
 ```
 
 Then we could change the config file of nebula-algorithm on meta and graph addresses:
@@ -105,7 +104,7 @@ Run LPA Algorithm on the basketballplayer graph space:
 ```bash
 /spark/bin/spark-submit --master "local" --conf spark.rpc.askTimeout=6000s \
     --class com.vesoft.nebula.algorithm.Main \
-    nebula-algorithm-2.6.1.jar \
+    nebula-algorithm-2.6.2.jar \
     -p application.conf
 ```
 
