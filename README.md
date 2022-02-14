@@ -22,18 +22,6 @@ Then you may see something like this:
 
 ![install_success](./images/install_success.webp)
 
-Also, there are some extended script for different purposes:
-
-> Bootstrap a nebula clsuter on existing KubeSphere All-in-one K8s env:
-
-```bash
-curl -sL nebula-kind.siwei.io/install-ks-1.sh | bash
-```
-> Bootstrap a nebula clsuter on existing K8s single node env:
-
-```bash
-curl -sL nebula-kind.siwei.io/install-on-k8s.sh | bash
-```
 
 ## What's Next?
 
@@ -157,3 +145,19 @@ If you are in China, [this](https://gist.github.com/y0ngb1n/7e8f16af3242c7815e7c
 
 - CPU resource is not enough
 Please assign more CPU/RAM to your docker or host machine.
+
+
+## Others
+
+Also, there are some extended script for different purposes:
+
+> Bootstrap a nebula clsuter on existing KubeSphere All-in-one K8s env:
+
+```bash
+curl -sL nebula-kind.siwei.io/install-ks-1.sh | bash
+```
+> Bootstrap a nebula clsuter on existing K8s single node env:
+
+```bash
+curl -sL nebula-kind.siwei.io/install-on-k8s.sh | bash
+```
