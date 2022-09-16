@@ -4,7 +4,6 @@ set -e
 # Copyright (c) 2021 vesoft inc. All rights reserved.
 #
 # This source code is licensed under Apache 2.0 License,
-# attached with Common Clause Condition 1.0, found in the LICENSES directory.
 
 # Usage: install.sh
 
@@ -350,7 +349,8 @@ function install_nebula_operator {
     kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
     curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
     export PATH=/usr/local/bin:$PATH
-    helm install --set manager.resources.requests.cpu=1m kruise https://github.com/openkruise/kruise/releases/download/v0.9.0/kruise-chart.tgz
+    helm repo add openkruise https://openkruise.github.io/charts/
+    helm install --set manager.resources.requests.cpu=1m kruise openkruise/kruise --version 1.2.0
     if [ ! -d "$WOKRING_PATH/nebula-operator" ]; then
         git clone https://github.com/vesoft-inc/nebula-operator.git
     else
