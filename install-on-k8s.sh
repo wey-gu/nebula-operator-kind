@@ -391,6 +391,8 @@ function install_hostpath_provisioner {
     do
        kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' -n kube-system > /dev/null
     done
+    Remove default for sc: hostpath
+    kubectl patch storageclass hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
 }
 
 function create_nebula_cluster {
