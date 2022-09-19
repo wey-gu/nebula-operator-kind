@@ -349,9 +349,10 @@ function install_nebula_operator {
     kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
     curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
     export PATH=/usr/local/bin:$PATH
-    helm install --set manager.resources.requests.cpu=1m kruise https://github.com/openkruise/kruise/releases/download/v0.9.0/kruise-chart.tgz
+    helm repo add openkruise https://openkruise.github.io/charts/
+    helm install --set manager.resources.requests.cpu=1m kruise openkruise/kruise --version 1.2.0
     if [ ! -d "$WOKRING_PATH/nebula-operator" ]; then
-        git clone --branch v0.8.0 https://github.com/vesoft-inc/nebula-operator.git
+        git clone --branch release-1.2 https://github.com/vesoft-inc/nebula-operator.git
         
     else
         logger_warn "$WOKRING_PATH/nebula-operator already exists, existing repo will be reused"
@@ -367,6 +368,7 @@ function install_nebula_operator {
     do
        kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' --all-namespaces > /dev/null
     done
+
     helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="1.2.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
 
     sleep 20
