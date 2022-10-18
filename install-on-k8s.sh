@@ -399,6 +399,8 @@ function create_nebula_cluster {
     cd $WOKRING_PATH
     sed -i 's/500m/1m/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     sed -i 's/500Mi/20Mi/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    # in case we have less than 3 nodes
+    echo '  unsatisfiableAction: ScheduleAnyway' >> nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     kubectl create -f nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
     sleep 45
     logger_info "Waiting for nebula cluster pods to be ready..."
