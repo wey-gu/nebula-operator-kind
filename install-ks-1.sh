@@ -367,7 +367,7 @@ function install_nebula_operator {
     do
        kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' --all-namespaces > /dev/null
     done
-    helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="1.3.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
+    helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="1.2.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
 
     sleep 20
     logger_info "Waiting for nebula-operator pods to be ready..."
