@@ -352,7 +352,7 @@ function install_nebula_operator {
     helm repo add openkruise https://openkruise.github.io/charts/
     helm install --set manager.resources.requests.cpu=1m kruise openkruise/kruise --version 1.2.0
     if [ ! -d "$WOKRING_PATH/nebula-operator" ]; then
-        git clone --branch release-1.2 https://github.com/vesoft-inc/nebula-operator.git
+        git clone --branch release-1.3 https://github.com/vesoft-inc/nebula-operator.git
         
     else
         logger_warn "$WOKRING_PATH/nebula-operator already exists, existing repo will be reused"
@@ -369,7 +369,7 @@ function install_nebula_operator {
        kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' --all-namespaces > /dev/null
     done
 
-    helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="1.2.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
+    helm install --set controllerManager.resources.requests.cpu=1m nebula-operator nebula-operator/nebula-operator --namespace=nebula-operator-system --version="1.3.0" > /dev/null || logger_error "Failed to install helm chart nebula-operator"
 
     sleep 20
     logger_info "Waiting for nebula-operator pods to be ready..."
@@ -418,7 +418,6 @@ function create_uninstall_script {
 # Copyright (c) 2021 vesoft inc. All rights reserved.
 #
 # This source code is licensed under Apache 2.0 License,
-# attached with Common Clause Condition 1.0, found in the LICENSES directory.
 
 # Usage: uninstall.sh
 
