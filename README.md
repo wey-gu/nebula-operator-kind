@@ -15,7 +15,7 @@ With the help of [KIND](https://kind.sigs.k8s.io/)(K8s IN Docker), KGonK helps u
 Just call the following one liner from your Linux Machine:
 
 ```bash
-curl -sL nebula-kind.siwei.io/install.sh | bash
+curl -sL https://raw.githubusercontent.com/wey-gu/nebula-operator-kind/main/install.sh | bash
 ```
 
 Then you may see something like this:
@@ -56,7 +56,7 @@ You could learn more about Nebula-Operator:
 To quickly try Nebula Algorithm, we could create a spark pod in same namespace of the nebulaCluster CRD:
 
 ```bash
-kubectl create -f http://nebula-kind.siwei.io/deployment/spark.yaml
+kubectl create -f https://raw.githubusercontent.com/wey-gu/nebula-operator-kind/main/deployment/spark.yaml
 kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name'
 ```
 
@@ -153,10 +153,10 @@ Also, there are some extended script for different purposes:
 > Bootstrap a nebula clsuter on existing KubeSphere All-in-one K8s env:
 
 ```bash
-curl -sL nebula-kind.siwei.io/install-ks-1.sh | bash
+curl -sL https://raw.githubusercontent.com/wey-gu/nebula-operator-kind/main/install-ks-1.sh | bash
 ```
 > Bootstrap a nebula clsuter on existing K8s single node env:
 
 ```bash
-curl -sL nebula-kind.siwei.io/install-on-k8s.sh | bash
+curl -sL https://raw.githubusercontent.com/wey-gu/nebula-operator-kind/main/install-on-k8s.sh | bash
 ```
