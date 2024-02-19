@@ -382,9 +382,9 @@ function install_nebula_operator {
 
 function install_hostpath_provisioner {
     cd $WOKRING_PATH
-    sed -i 's/500m/1m/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
-    sed -i 's/500Mi/20Mi/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
-    sed -i 's/gp2/hostpath/g' nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    sed -i 's/500m/1m/g' nebula-operator/config/samples/nebulacluster.yaml
+    sed -i 's/500Mi/20Mi/g' nebula-operator/config/samples/nebulacluster.yaml
+    sed -i 's/gp2/hostpath/g' nebula-operator/config/samples/nebulacluster.yaml
     helm repo add rimusz https://charts.rimusz.net
     helm repo update
     helm upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner
@@ -398,7 +398,7 @@ function install_hostpath_provisioner {
 
 function create_nebula_cluster {
     cd $WOKRING_PATH
-    kubectl create -f nebula-operator/config/samples/apps_v1alpha1_nebulacluster.yaml
+    kubectl create -f nebula-operator/config/samples/nebulacluster.yaml
     sleep 45
     logger_info "Waiting for nebula cluster pods to be ready..."
     until kubectl wait pod --timeout=-1s --for=condition=Ready -l '!job-name' > /dev/null
